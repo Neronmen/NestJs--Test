@@ -16,9 +16,14 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { CoursesModule } from './courses/courses.module';
 import { AuthMiddleware } from './middlewares/auth.middleware';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
@@ -34,6 +39,8 @@ import { AuthMiddleware } from './middlewares/auth.middleware';
     AuthModule,
     CoursesModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 
 // Em làm demo nên hong có chia private public rõ ràng anh chị thông cảm nhé em để private hết trừ login

@@ -6,20 +6,31 @@ import {
   Param,
   Patch,
   Post,
+  Query,
+  Req,
   ValidationPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 
 import { User } from './users.entity';
 import { UpdateUserDto } from 'src/validate/updateUser.dto';
+import { CreateUserDto } from 'src/validate/createUser.dto';
+
+// interface AuthRequest extends Request {
+//   user?: User;
+// }
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   // [GET] http://localhost:3000/users
   @Get()
-  getAllUser(): Promise<Partial<User>[]> {
-    return this.usersService.findAllUsers();
+  getAllUser(
+    @Query('limit') limit: string,
+    @Query('page') page: string,
+  ) {
+    return this.usersService.findAllUsers(page,limit);
   }
 
   // [GET] http://localhost:3000/users/:id
@@ -32,9 +43,7 @@ export class UsersController {
 
   // [POST] http://localhost:3000/users (kèm data)
   @Post()
-  createNewUser(
-    @Body() userData: Partial<User>,
-  ): Promise<{ status: number; message: string; user?: Partial<User> }> {
+  createNewUser(@Body() userData: CreateUserDto) {
     return this.usersService.createUser(userData);
   }
 

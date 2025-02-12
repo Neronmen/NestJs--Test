@@ -3,13 +3,13 @@ import {
   HttpStatus,
   Injectable,
   NotFoundException,
-  Req,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './users.entity';
 import { generateRandomString } from 'src/helpers/generate';
 import * as md5 from 'md5';
+import { CreateUserDto } from 'src/validate/createUser.dto';
 
 interface AuthRequest extends Request {
   user?: User;
@@ -25,9 +25,27 @@ export class UsersService {
   // Cần token Headers
 
   // [GET] http://localhost:3000/users
-  async findAllUsers(): Promise<Partial<User>[]> {
-    const users = await this.usersRepository.find();
-    return users.map(({ password, ...userNotPassword }) => userNotPassword);
+  async findAllUsers(page: string, limit: string) {
+    //Pagination
+    const pagination = {
+      currentPage: Number(page) || 1,
+      pageSize: Number(limit) || 10,
+    };
+    const skip = (pagination.currentPage - 1) * pagination.pageSize;
+    const [users, totalUsers] = await this.usersRepository.findAndCount({
+      skip: skip,
+      take: pagination.pageSize,
+    });
+
+    const totalPages = Math.ceil(totalUsers / pagination.pageSize);
+    //Pagination
+    
+    return {
+      totalUsers,
+      totalPages,
+      currentPage: pagination.currentPage,
+      users: users.map(({ password, ...userNotPassword }) => userNotPassword),
+    };
   }
 
   // [GET] http://localhost:3000/users/:id
@@ -50,9 +68,7 @@ export class UsersService {
   }
 
   // [POST] http://localhost:3000/users (kèm data)
-  async createUser(
-    userData: Partial<User>,
-  ): Promise<{ status: number; message: string; user?: Partial<User> }> {
+  async createUser(userData: CreateUserDto) {
     if (!userData) {
       throw new BadRequestException({
         status: HttpStatus.BAD_REQUEST,
@@ -63,16 +79,13 @@ export class UsersService {
       where: { email: userData.email },
     });
     if (emailExist) {
-      throw new BadRequestException({
-        status: HttpStatus.BAD_REQUEST,
-        message: 'Email đã tồn tại',
-      });
+      throw new BadRequestException('Email đã tồn tại');
     }
-    const token = generateRandomString(36);
-    userData.token = token;
+    // hash password
     if (userData.password) {
       userData.password = md5(userData.password.trim());
     }
+    // End hash password
     const newUser = this.usersRepository.create(userData);
     if (!newUser) {
       throw new NotFoundException('Tạo không thành công');

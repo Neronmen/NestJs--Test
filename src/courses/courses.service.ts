@@ -16,7 +16,6 @@ export class CoursesService {
     private readonly coursesRepository: Repository<Course>,
   ) {}
 
-
   // [GET] http://localhost:3000/courses
   async getAllCourses(): Promise<{
     status: number;
@@ -24,7 +23,6 @@ export class CoursesService {
     course?: Partial<Course>[];
   }> {
     const courses = await this.coursesRepository.find();
-    console.log('service');
     if (courses && courses.length > 0) {
       return {
         status: HttpStatus.OK,
@@ -38,15 +36,12 @@ export class CoursesService {
     };
   }
 
-
-
-   // [GET] http://localhost:3000/courses/:userId
+  // [GET] http://localhost:3000/courses/:userId
   async getAllCoursesByUserId(id: number): Promise<{
     status: number;
     message: string;
     course?: Partial<Course>[];
   }> {
-    console.log(id);
     const allCoursesUser = await this.coursesRepository.find({
       where: { instructor: { id: id } },
       // relations: ['instructor'],
@@ -63,6 +58,4 @@ export class CoursesService {
       course: allCoursesUser,
     };
   }
-
-
 }

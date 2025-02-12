@@ -6,6 +6,7 @@ import {
 import { Request, Response, NextFunction } from 'express';
 import { User } from 'src/users/users.entity';
 import { DataSource } from 'typeorm';
+import * as jwt from 'jsonwebtoken';
 
 interface AuthRequest extends Request {
   user?: User;
@@ -28,8 +29,9 @@ export class AuthMiddleware implements NestMiddleware {
 
     try {
       if (!token) throw new UnauthorizedException('Không có token');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await this.userRepository.findOne({
-        where: { token: token },
+        where: { id: decoded.id },
       });
       if (!user) throw new UnauthorizedException('Token không hợp lệ');
       req.user = user;

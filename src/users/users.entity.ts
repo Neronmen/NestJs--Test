@@ -27,8 +27,6 @@ export class User {
   @CreateDateColumn()
   created_at: Date;
 
-  @Column({ length: 36 })
-  token: string;
 
   @OneToMany(() => Course, (course) => course.instructor)
   courses: Course[];

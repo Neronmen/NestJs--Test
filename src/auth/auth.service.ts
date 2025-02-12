@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/users.entity';
 import { Repository } from 'typeorm';
 import * as md5 from 'md5';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
@@ -34,13 +35,17 @@ export class AuthService {
         message: 'Mật khẩu không chính xác ',
       });
     }
-    const { password: _, token, ...userWithoutPassword } = user;
+    const { password: _, ...userWithoutPassword } = user;
+    const payload = { id: user.id, role: user.role };
+    const tokenJWT = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
 
     return {
       status: HttpStatus.OK,
       message: 'Đăng nhập thành công',
       user: userWithoutPassword,
-      token: token,
+      token: tokenJWT,
     };
   }
 }
